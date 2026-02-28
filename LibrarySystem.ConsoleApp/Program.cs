@@ -2,21 +2,19 @@
 using LibrarySystem.Data;
 using LibrarySystem.Data.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 var host = Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration((context, config) =>
+    .ConfigureLogging(logging =>
     {
-        config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+        logging.ClearProviders();
     })
-    .ConfigureServices((context, services) =>
+    .ConfigureServices(services =>
     {
-        var cs = context.Configuration.GetConnectionString("LibraryDb");
-
         services.AddDbContext<LibraryContext>(options =>
-        options.UseSqlite("Data Source=library_console.db"));
+            options.UseSqlite("Data Source=library_console.db"));
 
         services.AddScoped<LoanService>();
     })
@@ -26,12 +24,12 @@ using var scope = host.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<LibraryContext>();
 var loanService = scope.ServiceProvider.GetRequiredService<LoanService>();
 
-// 1) Se till att databasen är uppdaterad (migrations)
 Console.WriteLine("Kör migrations (Database.Migrate)...");
 await db.Database.MigrateAsync();
-Console.WriteLine("OK.\n");
+Console.WriteLine("OK.");
+Console.WriteLine("====================================\n");
 
-// 2) Seed-data (om tomt)
+// Seed om tomt
 if (!await db.Books.AnyAsync())
 {
     db.Books.AddRange(
@@ -51,10 +49,9 @@ if (!await db.Members.AnyAsync())
 
 await db.SaveChangesAsync();
 
-// Enkel meny
 while (true)
 {
-    Console.WriteLine("\n=== EF Smoke Test ===");
+    Console.WriteLine("\n==== Library System Console App (SQLite) ====");
     Console.WriteLine("1. Lista böcker");
     Console.WriteLine("2. Lista medlemmar");
     Console.WriteLine("3. Låna bok (bookId, memberId)");
@@ -62,8 +59,8 @@ while (true)
     Console.WriteLine("5. Lista aktiva lån");
     Console.WriteLine("0. Avsluta");
     Console.Write("Välj: ");
-    var choice = Console.ReadLine();
 
+    var choice = Console.ReadLine();
     if (choice == "0") break;
 
     switch (choice)
@@ -89,27 +86,40 @@ while (true)
         case "3":
             {
                 Console.Write("BookId: ");
-                if (!int.TryParse(Console.ReadLine(), out var bookId)) { Console.WriteLine("Ogiltigt BookId."); break; }
+                if (!int.TryParse(Console.ReadLine(), out var bookId))
+                {
+                    Console.WriteLine("Ogiltigt BookId.");
+                    break;
+                }
 
                 Console.Write("MemberId: ");
-                if (!int.TryParse(Console.ReadLine(), out var memberId)) { Console.WriteLine("Ogiltigt MemberId."); break; }
+                if (!int.TryParse(Console.ReadLine(), out var memberId))
+                {
+                    Console.WriteLine("Ogiltigt MemberId.");
+                    break;
+                }
 
                 try
                 {
-                    var loan = await loanService.BorrowAsync(bookId, memberId);
+                    var loan = await loanService.BorrowAsync(bookId, memberId, days: 14);
                     Console.WriteLine($"OK! Skapade lån #{loan.Id}. Förfallodatum: {loan.DueDate:yyyy-MM-dd}");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Fel: {ex.Message}");
                 }
+
                 break;
             }
 
         case "4":
             {
                 Console.Write("LoanId: ");
-                if (!int.TryParse(Console.ReadLine(), out var loanId)) { Console.WriteLine("Ogiltigt LoanId."); break; }
+                if (!int.TryParse(Console.ReadLine(), out var loanId))
+                {
+                    Console.WriteLine("Ogiltigt LoanId.");
+                    break;
+                }
 
                 try
                 {
@@ -120,6 +130,7 @@ while (true)
                 {
                     Console.WriteLine($"Fel: {ex.Message}");
                 }
+
                 break;
             }
 
@@ -132,8 +143,15 @@ while (true)
                     .ToListAsync();
 
                 Console.WriteLine("\nAktiva lån:");
+                if (active.Count == 0)
+                {
+                    Console.WriteLine("(Inga aktiva lån)");
+                    break;
+                }
+
                 foreach (var l in active)
                     Console.WriteLine($"{l.Id}. BookId={l.BookId}, MemberId={l.MemberId}, Due={l.DueDate:yyyy-MM-dd}");
+
                 break;
             }
 
