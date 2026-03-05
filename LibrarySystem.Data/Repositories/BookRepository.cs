@@ -37,11 +37,18 @@ public class BookRepository : IBookRepository
         await _ctx.SaveChangesAsync();
     }
 
-    public Task<List<Book>> SearchAsync(string searchTerm)
+    public async Task<List<Book>> SearchAsync(string searchTerm)
     {
-        var term = (searchTerm ?? "").Trim();
-        return _ctx.Books.AsNoTracking()
-            .Where(b => b.ISBN.Contains(term) || b.Title.Contains(term) || b.Author.Contains(term))
+        if (string.IsNullOrWhiteSpace(searchTerm))
+            return await _ctx.Books.AsNoTracking().ToListAsync();
+
+        var term = searchTerm.Trim().ToLower();
+
+        return await _ctx.Books.AsNoTracking()
+            .Where(b =>
+                b.Title.ToLower().Contains(term) ||
+                b.Author.ToLower().Contains(term) ||
+                b.ISBN.ToLower().Contains(term))
             .ToListAsync();
     }
 }
