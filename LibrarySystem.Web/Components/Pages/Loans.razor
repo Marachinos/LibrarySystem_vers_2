@@ -1,0 +1,191 @@
+﻿@page "/loans"
+@rendermode InteractiveServer
+
+@using LibrarySystem.Core.Models
+@using LibrarySystem.Data
+@using LibrarySystem.Data.Services
+@using Microsoft.EntityFrameworkCore
+
+@inject LibraryContext Db
+@inject LoanService LoanService
+
+<h2>📄 Utlåning</h2>
+
+@if (!string.IsNullOrWhiteSpace(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+@if (!string.IsNullOrWhiteSpace(message))
+{
+    <div class="alert alert-info">@message</div>
+}
+
+<div class="card p-3 mb-3">
+    <h4>Skapa nytt lån</h4>
+
+    <div class="row g-2">
+        <div class="col-md-5">
+            <label>Bok</label>
+            <select class="form-select" @bind="newLoanBookId">
+                <option value="0">-- välj bok --</option>
+                @foreach (var b in books)
+                {
+                    <option value="@b.Id">
+                        @b.Title (@(b.IsAvailable ? "Tillgänglig" : "Utlånad"))
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-5">
+            <label>Medlem</label>
+            <select class="form-select" @bind="newLoanMemberId">
+                <option value="0">-- välj medlem --</option>
+                @foreach (var m in members)
+                {
+                    <option value="@m.Id">@m.MemberId - @m.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label>Dagar</label>
+            <input class="form-control" type="number" min="1" max="60" @bind="newLoanDays" />
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-primary mt-3"
+            disabled="@(newLoanBookId == 0 || newLoanMemberId == 0)"
+            @onclick="CreateLoan">
+        Låna ut
+    </button>
+</div>
+
+<h4>Aktiva lån</h4>
+
+@if (activeLoans.Count == 0)
+{
+    <p>Inga aktiva lån.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>LånId</th>
+                <th>Bok</th>
+                <th>Medlem</th>
+                <th>Lånedatum</th>
+                <th>Förfallodatum</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var l in activeLoans.OrderBy(x => x.DueDate))
+            {
+                var overdue = l.DueDate < DateTime.UtcNow;
+                <tr class="@(overdue ? "table-danger" : "")">
+                    <td>@l.Id</td>
+                    <td>@BookTitle(l.BookId)</td>
+                    <td>@MemberName(l.MemberId)</td>
+                    <td>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                    <td>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (overdue)
+                        {
+                            <span class="text-danger">Försenad</span>
+                        }
+                        else
+                        {
+                            <span class="text-success">OK</span>
+                        }
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-warning btn-sm"
+                                @onclick="() => ReturnLoan(l.Id)">
+                            Returnera
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    private List<Book> books = new();
+    private List<Member> members = new();
+    private List<Loan> activeLoans = new();
+
+    private int newLoanBookId = 0;
+    private int newLoanMemberId = 0;
+    private int newLoanDays = 14;
+
+    private string? error;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAll();
+    }
+
+    private async Task ReloadAll()
+    {
+        error = null;
+        message = null;
+
+        books = await Db.Books.AsNoTracking().OrderBy(b => b.Title).ToListAsync();
+        members = await Db.Members.AsNoTracking().OrderBy(m => m.MemberId).ToListAsync();
+
+        activeLoans = await Db.Loans.AsNoTracking()
+            .Where(l => l.ReturnDate == null)
+            .OrderBy(l => l.DueDate)
+            .ToListAsync();
+    }
+
+    private string BookTitle(int bookId)
+        => books.FirstOrDefault(b => b.Id == bookId)?.Title ?? $"(Bok {bookId})";
+
+    private string MemberName(int memberId)
+        => members.FirstOrDefault(m => m.Id == memberId)?.Name ?? $"(Medlem {memberId})";
+
+    private async Task CreateLoan()
+    {
+        error = null;
+        message = null;
+
+        try
+        {
+            await LoanService.BorrowAsync(newLoanBookId, newLoanMemberId, newLoanDays);
+            message = "Lånet skapades.";
+
+            // Reset val
+            newLoanBookId = 0;
+            newLoanMemberId = 0;
+            newLoanDays = 14;
+
+            await ReloadAll();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+
+    private async Task ReturnLoan(int loanId)
+    {
+        error = null;
+        message = null;
+
+        try
+        {
+            await LoanService.ReturnAsync(loanId);
+            message = "Lånet returnerades.";
+            await ReloadAll();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

@@ -1,0 +1,167 @@
+﻿@page "/members/{Id:int}"
+@rendermode InteractiveServer
+
+@using LibrarySystem.Core.Models
+@using LibrarySystem.Data
+@using Microsoft.EntityFrameworkCore
+@using LibrarySystem.Data.Services
+@inject LibraryContext Db
+@inject LoanService LoanService
+
+<h2>Medlemsdetaljer</h2>
+
+@if (loading)
+{
+    <p>Laddar...</p>
+}
+else if (member is null)
+{
+    <p>Medlem hittades inte.</p>
+    <a class="btn btn-secondary" href="/members">Tillbaka</a>
+}
+else
+{
+    <div class="card p-3 mb-3">
+        <h3>@member.Name</h3>
+        <p><b>Medlems-ID:</b> @member.MemberId</p>
+        <p><b>E-post:</b> @member.Email</p>
+        <p><b>Medlem sedan:</b> @member.MemberSince.ToLocalTime().ToString("yyyy-MM-dd")</p>
+        <p><b>Aktiva lån:</b> @activeLoans.Count</p>
+
+        <a class="btn btn-secondary" href="/members">Tillbaka</a>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert alert-info">@message</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-danger">@error</div>
+    }
+    <h4>Aktiva lån</h4>
+    @if (activeLoans.Count == 0)
+    {
+        <p>Inga aktiva lån.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Bok</th>
+                    <th>Lånedatum</th>
+                    <th>Förfallodatum</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var l in activeLoans.OrderBy(x => x.DueDate))
+                {
+                    var overdue = l.DueDate < DateTime.UtcNow;
+                    <tr class="@(overdue ? "table-danger" : "")">
+                        <td>@BookTitle(l.BookId)</td>
+                        <td>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                        <td>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                        <td>@(overdue ? "Försenad" : "OK")</td>
+                        <td><button type="button" class="btn btn-warning btn-sm"
+                                    @onclick="() => ReturnLoan(l.Id)">
+                                Returnera
+                            </button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h4>Lånehistorik</h4>
+    @if (allLoans.Count == 0)
+    {
+        <p>Ingen lånehistorik.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Bok</th>
+                    <th>Lånedatum</th>
+                    <th>Förfallodatum</th>
+                    <th>Returnerad</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var l in allLoans.OrderByDescending(x => x.LoanDate))
+                {
+                    <tr>
+                        <td>@BookTitle(l.BookId)</td>
+                        <td>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                        <td>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                        <td>@(l.ReturnDate is null ? "Nej" : l.ReturnDate.Value.ToLocalTime().ToString("yyyy-MM-dd"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool loading = true;
+    private Member? member;
+
+    private List<Loan> activeLoans = new();
+    private List<Loan> allLoans = new();
+    private List<Book> books = new();
+    private string? message;
+    private string? error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+
+        member = await Db.Members.AsNoTracking().FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (member is not null)
+        {
+            // Lån för medlemmen
+            allLoans = await Db.Loans.AsNoTracking()
+                .Where(l => l.MemberId == Id)
+                .ToListAsync();
+
+            activeLoans = allLoans.Where(l => l.ReturnDate == null).ToList();
+
+            // Hämta relevanta böcker (för titlar)
+            var bookIds = allLoans.Select(l => l.BookId).Distinct().ToList();
+
+            books = await Db.Books.AsNoTracking()
+                .Where(b => bookIds.Contains(b.Id))
+                .ToListAsync();
+        }
+
+        loading = false;
+    }
+
+    private string BookTitle(int bookId)
+        => books.FirstOrDefault(b => b.Id == bookId)?.Title ?? $"(Bok {bookId})";
+
+    private async Task ReturnLoan(int loanId)
+    {
+        error = null;
+        message = null;
+
+        try
+        {
+            await LoanService.ReturnAsync(loanId);
+            message = "Lånet returnerades.";
+
+            // Ladda om medlem + lån
+            await OnParametersSetAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

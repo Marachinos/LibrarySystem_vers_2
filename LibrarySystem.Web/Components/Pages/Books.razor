@@ -55,7 +55,9 @@ else
             @foreach (var book in ViewBooks)
             {
                 <tr>
-                    <td>@book.Title</td>
+                    <td>
+                        <a href="/books/@book.Id">@book.Title</a>
+                    </td>
                     <td>@book.Author</td>
                     <td>@book.PublishedYear</td>
                     <td>@book.ISBN</td>

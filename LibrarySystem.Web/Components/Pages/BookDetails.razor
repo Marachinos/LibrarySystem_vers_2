@@ -1,0 +1,223 @@
+﻿@page "/books/{Id:int}"
+@rendermode InteractiveServer
+
+@using LibrarySystem.Core.Models
+@using LibrarySystem.Data
+@using LibrarySystem.Data.Services
+@using Microsoft.EntityFrameworkCore
+
+@inject LibraryContext Db
+@inject LoanService LoanService
+@inject NavigationManager Nav
+
+<h2>Bokdetaljer</h2>
+
+@if (loading)
+{
+    <p>Laddar...</p>
+}
+else if (book is null)
+{
+    <p>Boken hittades inte.</p>
+    <a class="btn btn-secondary" href="/books">Tillbaka</a>
+}
+else
+{
+    <div class="card p-3 mb-3">
+        <h3>@book.Title</h3>
+        <p><b>Författare:</b> @book.Author</p>
+        <p><b>ISBN:</b> @book.ISBN</p>
+        <p><b>Utgivningsår:</b> @book.PublishedYear</p>
+        <p>
+            <b>Status:</b>
+            @if (book.IsAvailable)
+            {
+                <span class="text-success">Tillgänglig</span>
+            }
+            else
+            {
+                <span class="text-danger">Utlånad</span>
+            }
+        </p>
+
+        <div class="mt-3">
+            @if (book.IsAvailable)
+            {
+                <div class="mb-2">
+                    <label><b>Välj medlem för utlåning:</b></label>
+                    <select class="form-select" @bind="selectedMemberId">
+                        <option value="0">-- välj medlem --</option>
+                        @foreach (var m in members)
+                        {
+                            <option value="@m.Id">@m.MemberId - @m.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <button type="button" class="btn btn-primary"
+                        disabled="@(selectedMemberId == 0)"
+                        @onclick="Borrow">
+                    Låna bok
+                </button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-warning"
+                        disabled="@(activeLoan is null)"
+                        @onclick="Return">
+                    Returnera bok
+                </button>
+
+                @if (activeLoan is not null)
+                {
+                    <div class="mt-2">
+                        <small>
+                            Aktivt lån: MedlemId=@activeLoan.MemberId,
+                            Förfallodatum: @activeLoan.DueDate.ToLocalTime().ToString("yyyy-MM-dd")
+                        </small>
+                    </div>
+                }
+            }
+
+            <a class="btn btn-secondary ms-2" href="/books">Tillbaka</a>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="alert alert-info mt-3">@message</div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="alert alert-danger mt-3">@error</div>
+        }
+    </div>
+
+    <h4>Lånehistorik</h4>
+
+    @if (loans.Count == 0)
+    {
+        <p>Inga lån registrerade för denna bok.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>LånId</th>
+                    <th>Medlem</th>
+                    <th>Lånedatum</th>
+                    <th>Förfallodatum</th>
+                    <th>Returnerad</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var l in loans.OrderByDescending(x => x.LoanDate))
+                {
+                    <tr>
+                        <td>@l.Id</td>
+                        <td>@MemberName(l.MemberId)</td>
+                        <td>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                        <td>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                        <td>
+                            @(l.ReturnDate is null
+                                            ? "Nej"
+                                            : l.ReturnDate.Value.ToLocalTime().ToString("yyyy-MM-dd"))
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool loading = true;
+    private Book? book;
+
+    private List<Member> members = new();
+    private List<Loan> loans = new();
+    private Loan? activeLoan;
+
+    private int selectedMemberId = 0;
+
+    private string? message;
+    private string? error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        message = null;
+        error = null;
+
+        // Ladda bok
+        book = await Db.Books.AsNoTracking().FirstOrDefaultAsync(b => b.Id == Id);
+
+        // Ladda medlemmar (för dropdown)
+        members = await Db.Members.AsNoTracking()
+            .OrderBy(m => m.MemberId)
+            .ToListAsync();
+
+        // Ladda lån för boken
+        loans = await Db.Loans.AsNoTracking()
+            .Where(l => l.BookId == Id)
+            .OrderByDescending(l => l.LoanDate)
+            .ToListAsync();
+
+        activeLoan = loans.FirstOrDefault(l => l.ReturnDate == null);
+
+        loading = false;
+    }
+
+    private string MemberName(int memberDbId)
+    {
+        var m = members.FirstOrDefault(x => x.Id == memberDbId);
+        return m is null ? $"(Id {memberDbId})" : $"{m.MemberId} - {m.Name}";
+    }
+
+    private async Task Borrow()
+    {
+        error = null;
+        message = null;
+
+        try
+        {
+            await LoanService.BorrowAsync(Id, selectedMemberId);
+            message = "Boken har lånats ut.";
+
+            // Ladda om sidan-data
+            await OnParametersSetAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+
+    private async Task Return()
+    {
+        error = null;
+        message = null;
+
+        try
+        {
+            if (activeLoan is null)
+            {
+                error = "Inget aktivt lån hittades.";
+                return;
+            }
+
+            await LoanService.ReturnAsync(activeLoan.Id);
+            message = "Boken har returnerats.";
+
+            // Ladda om sidan-data
+            await OnParametersSetAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

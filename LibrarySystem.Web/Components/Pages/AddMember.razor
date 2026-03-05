@@ -1,0 +1,64 @@
+﻿@page "/members/add"
+@rendermode InteractiveServer
+
+@using LibrarySystem.Core.Models
+@using LibrarySystem.Data
+
+@inject LibraryContext Db
+@inject NavigationManager Nav
+
+<h2>Registrera ny medlem</h2>
+
+<EditForm Model="member" OnValidSubmit="HandleSubmit" FormName="addMemberForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Medlems-ID</label>
+        <InputText class="form-control" @bind-Value="member.MemberId" />
+    </div>
+
+    <div class="mb-3">
+        <label>Namn</label>
+        <InputText class="form-control" @bind-Value="member.Name" />
+    </div>
+
+    <div class="mb-3">
+        <label>E-post</label>
+        <InputText class="form-control" @bind-Value="member.Email" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Spara</button>
+    <a class="btn btn-secondary ms-2" href="/members">Avbryt</a>
+
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-danger mt-3">@error</div>
+    }
+</EditForm>
+
+@code {
+    private Member member = new()
+    {
+        MemberSince = DateTime.UtcNow
+    };
+
+    private string? error;
+
+    private async Task HandleSubmit()
+    {
+        error = null;
+
+        try
+        {
+            Db.Members.Add(member);
+            await Db.SaveChangesAsync();
+
+            Nav.NavigateTo("/members");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

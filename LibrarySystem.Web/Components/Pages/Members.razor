@@ -1,0 +1,84 @@
+﻿@page "/members"
+@rendermode InteractiveServer
+
+@using LibrarySystem.Core.Models
+@using LibrarySystem.Data
+@using Microsoft.EntityFrameworkCore
+
+@inject LibraryContext Db
+
+<h2>👤 Medlemmar</h2>
+<a class="btn btn-success mb-3" href="/members/add">
+    + Lägg till medlem
+</a>
+
+@if (loading)
+{
+    <p>Laddar...</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Medlems-ID</th>
+                <th>Namn</th>
+                <th>E-post</th>
+                <th>Medlem sedan</th>
+                <th>Aktiva lån</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in members)
+            {
+                <tr>
+                    <td>@row.MemberId</td>
+                    <td><a href="/members/@row.Id">@row.Name</a></td>
+                    <td>@row.Email</td>
+                    <td>@row.MemberSince.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                    <td>@row.ActiveLoans</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p>Totalt: @members.Count medlemmar</p>
+}
+
+@code {
+    private bool loading = true;
+
+    private List<MemberRow> members = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        loading = true;
+
+        // Hämtar alla medlemmar + räknar aktiva lån i DB (ReturnDate == null)
+        members = await Db.Members
+            .AsNoTracking()
+            .OrderBy(m => m.MemberId)
+            .Select(m => new MemberRow
+            {
+                Id = m.Id,
+                MemberId = m.MemberId,
+                Name = m.Name,
+                Email = m.Email,
+                MemberSince = m.MemberSince,
+                ActiveLoans = Db.Loans.Count(l => l.MemberId == m.Id && l.ReturnDate == null)
+            })
+            .ToListAsync();
+
+        loading = false;
+    }
+
+    private class MemberRow
+    {
+        public int Id { get; set; }
+        public string MemberId { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
+        public DateTime MemberSince { get; set; }
+        public int ActiveLoans { get; set; }
+    }
+}

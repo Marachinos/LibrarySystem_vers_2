@@ -1,4 +1,5 @@
 using LibrarySystem.Data;
+using LibrarySystem.Data.Services;
 using LibrarySystem.Web.Components;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,15 +16,17 @@ builder.Services.AddDbContext<LibraryContext>(options =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddScoped<LoanService>();
+
 var app = builder.Build();
 
-// ===== (Valfritt men rekommenderat) Migrate + Seed =====
+// ===== Migrate + Seed =====
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<LibraryContext>();
     db.Database.Migrate();
 
-    // Seed om tomt (du kan ta bort detta senare)
+    // Seed Books
     if (!db.Books.Any())
     {
         db.Books.AddRange(
@@ -31,6 +34,29 @@ using (var scope = app.Services.CreateScope())
             new LibrarySystem.Core.Models.Book { ISBN = "123-2", Title = "Hobbiten", Author = "J.R.R. Tolkien", PublishedYear = 1937, IsAvailable = true },
             new LibrarySystem.Core.Models.Book { ISBN = "123-3", Title = "Clean Code", Author = "Robert C. Martin", PublishedYear = 2008, IsAvailable = true }
         );
+        db.SaveChanges();
+    }
+
+    //Seed Members
+    if (!db.Members.Any())
+    {
+        db.Members.AddRange(
+            new LibrarySystem.Core.Models.Member
+            {
+                MemberId = "M001",
+                Name = "Anna Andersson",
+                Email = "anna@test.se",
+                MemberSince = DateTime.UtcNow
+            },
+            new LibrarySystem.Core.Models.Member
+            {
+                MemberId = "M002",
+                Name = "Bertil Berg",
+                Email = "bertil@test.se",
+                MemberSince = DateTime.UtcNow
+            }
+        );
+
         db.SaveChanges();
     }
 }
