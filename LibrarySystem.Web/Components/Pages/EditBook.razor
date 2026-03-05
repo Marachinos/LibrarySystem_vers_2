@@ -1,0 +1,113 @@
+﻿@page "/books/edit/{Id:int}"
+@rendermode InteractiveServer
+
+@using LibrarySystem.Core.Models
+@using LibrarySystem.Data.Repositories
+@inject IBookRepository Books
+@inject NavigationManager Nav
+
+<h2>Redigera bok</h2>
+
+@if (loading)
+{
+    <p>Laddar...</p>
+}
+else if (book is null)
+{
+    <div class="alert alert-danger">Boken hittades inte.</div>
+    <a class="btn btn-secondary" href="/books">Tillbaka</a>
+}
+else
+{
+    <EditForm Model="book" OnValidSubmit="HandleSubmit" FormName="editBookForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label>ISBN</label>
+            <InputText class="form-control" @bind-Value="book.ISBN" />
+            <ValidationMessage For="@(() => book.ISBN)" />
+        </div>
+
+        <div class="mb-3">
+            <label>Titel</label>
+            <InputText class="form-control" @bind-Value="book.Title" />
+            <ValidationMessage For="@(() => book.Title)" />
+        </div>
+
+        <div class="mb-3">
+            <label>Författare</label>
+            <InputText class="form-control" @bind-Value="book.Author" />
+            <ValidationMessage For="@(() => book.Author)" />
+        </div>
+
+        <div class="mb-3">
+            <label>Publiceringsår</label>
+            <InputNumber class="form-control" @bind-Value="book.PublishedYear" />
+            <ValidationMessage For="@(() => book.PublishedYear)" />
+        </div>
+
+        <div class="mb-3">
+            <label>Status</label>
+            <select class="form-select" @bind="book.IsAvailable">
+                <option value="true">Tillgänglig</option>
+                <option value="false">Utlånad</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Spara</button>
+        <a class="btn btn-secondary ms-2" href="/books">Avbryt</a>
+
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="alert alert-danger mt-3">@error</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="alert alert-info mt-3">@message</div>
+        }
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool loading = true;
+    private Book? book;
+
+    private string? error;
+    private string? message;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        error = null;
+        message = null;
+
+        // Hämta boken
+        book = await Books.GetByIdAsync(Id);
+
+        loading = false;
+    }
+
+    private async Task HandleSubmit()
+    {
+        error = null;
+        message = null;
+
+        try
+        {
+            if (book is null)
+                return;
+
+            await Books.UpdateAsync(book);
+
+            message = "Boken uppdaterades.";
+            Nav.NavigateTo("/books");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

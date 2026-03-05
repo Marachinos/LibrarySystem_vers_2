@@ -1,4 +1,5 @@
 using LibrarySystem.Data;
+using LibrarySystem.Data.Repositories;
 using LibrarySystem.Data.Services;
 using LibrarySystem.Web.Components;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddScoped<LoanService>();
+
+builder.Services.AddScoped<IBookRepository, BookRepository>();
 
 var app = builder.Build();
 

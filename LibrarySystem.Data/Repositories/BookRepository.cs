@@ -11,8 +11,12 @@ public class BookRepository : IBookRepository
     public Task<List<Book>> GetAllAsync()
         => _ctx.Books.AsNoTracking().ToListAsync();
 
-    public Task<Book?> GetByIdAsync(int id)
-        => _ctx.Books.Include(b => b.Loans).AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+    public async Task<Book?> GetByIdAsync(int id)
+    {
+        return await _ctx.Books
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.Id == id);
+    }
 
     public Task<Book?> GetByISBNAsync(string isbn)
         => _ctx.Books.FirstOrDefaultAsync(b => b.ISBN == isbn);
@@ -25,7 +29,16 @@ public class BookRepository : IBookRepository
 
     public async Task UpdateAsync(Book book)
     {
-        _ctx.Books.Update(book);
+        var existing = await _ctx.Books.FirstOrDefaultAsync(b => b.Id == book.Id);
+        if (existing is null)
+            throw new InvalidOperationException("Boken finns inte.");
+
+        existing.ISBN = book.ISBN;
+        existing.Title = book.Title;
+        existing.Author = book.Author;
+        existing.PublishedYear = book.PublishedYear;
+        existing.IsAvailable = book.IsAvailable;
+
         await _ctx.SaveChangesAsync();
     }
 

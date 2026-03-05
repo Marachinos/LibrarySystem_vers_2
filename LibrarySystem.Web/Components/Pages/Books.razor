@@ -40,6 +40,7 @@
 }
 else
 {
+    <div class="table-responsive">
     <table class="table table-striped">
         <thead>
             <tr>
@@ -48,6 +49,7 @@ else
                 <th>År</th>
                 <th>ISBN</th>
                 <th>Status</th>
+                <th></th>
                 <th></th>
             </tr>
         </thead>
@@ -72,7 +74,8 @@ else
                         }
                     </td>
                     <td>
-                        <button class="btn btn-danger btn-sm"
+                        <a class="btn btn-outline-secondary btn-sm" href="/books/edit/@book.Id">Redigera</a>
+                        <button type="button" class="btn btn-danger btn-sm ms-2"
                                 @onclick="() => DeleteBook(book.Id)">
                             Ta bort
                         </button>
@@ -81,6 +84,7 @@ else
             }
         </tbody>
     </table>
+    </div>
 
     <p>Visar @ViewBooks.Count() av @books.Count böcker.</p>
 }
