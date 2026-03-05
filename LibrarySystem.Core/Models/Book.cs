@@ -1,4 +1,5 @@
 ﻿using LibrarySystem.Core.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace LibrarySystem.Core.Models;
 
@@ -6,10 +7,21 @@ public class Book : ISearchable
 {
     public int Id { get; set; }
 
+    [Required(ErrorMessage = "ISBN är obligatoriskt.")]
+    [MaxLength(50)]
     public string ISBN { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Titel är obligatorisk.")]
+    [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Författare är obligatorisk.")]
+    [MaxLength(200)]
     public string Author { get; set; } = string.Empty;
+
+    [Range(1, 3000, ErrorMessage = "Publiceringsår måste vara ett giltigt år.")]
     public int PublishedYear { get; set; }
+
     public bool IsAvailable { get; set; } = true;
 
     public ICollection<Loan> Loans { get; set; } = new List<Loan>();

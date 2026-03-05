@@ -1,0 +1,145 @@
+﻿@page "/books"
+@rendermode InteractiveServer
+@using LibrarySystem.Core.Models
+@using LibrarySystem.Data
+@using Microsoft.EntityFrameworkCore
+@inject LibraryContext Db
+
+<h1>📚 Böcker</h1>
+
+<div style="max-width: 500px; margin-bottom: 12px;">
+    <input class="form-control"
+           placeholder="Sök titel, författare eller ISBN..."
+           @bind="searchTerm" @bind:event="oninput" />
+</div>
+
+<div style="margin-bottom: 12px;">
+    <button type="button" class="btn btn-outline-primary btn-sm"
+            @onclick="() => SetSort(nameof(Book.Title))">
+        Sortera: Titel
+    </button>
+
+    <button type="button" class="btn btn-outline-primary btn-sm" style="margin-left:8px;"
+            @onclick="() => SetSort(nameof(Book.PublishedYear))">
+        Sortera: År
+    </button>
+
+    <button type="button" class="btn btn-outline-secondary btn-sm" style="margin-left:8px;"
+            @onclick="ToggleSortDirection">
+        @(sortAscending ? "⬆️ Stigande" : "⬇️ Fallande")
+    </button>
+
+    <a class="btn btn-success btn-sm" style="margin-left:8px;" href="/books/add">
+        + Lägg till bok
+    </a>
+</div>
+
+@if (loading)
+{
+    <p>Laddar...</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Titel</th>
+                <th>Författare</th>
+                <th>År</th>
+                <th>ISBN</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in ViewBooks)
+            {
+                <tr>
+                    <td>@book.Title</td>
+                    <td>@book.Author</td>
+                    <td>@book.PublishedYear</td>
+                    <td>@book.ISBN</td>
+                    <td>
+                        @if (book.IsAvailable)
+                        {
+                            <span class="text-success">Tillgänglig</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">Utlånad</span>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-danger btn-sm"
+                                @onclick="() => DeleteBook(book.Id)">
+                            Ta bort
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p>Visar @ViewBooks.Count() av @books.Count böcker.</p>
+}
+
+@code {
+    private List<Book> books = new();
+    private string searchTerm = "";
+    private bool loading = true;
+
+    private string sortColumn = nameof(Book.Title);
+    private bool sortAscending = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        books = await Db.Books.AsNoTracking().ToListAsync();
+        loading = false;
+    }
+
+    private IEnumerable<Book> ViewBooks
+    {
+        get
+        {
+            IEnumerable<Book> query = books;
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(b =>
+                    b.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    b.Author.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    b.ISBN.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
+
+            query = (sortColumn, sortAscending) switch
+            {
+                (nameof(Book.PublishedYear), true) => query.OrderBy(b => b.PublishedYear),
+                (nameof(Book.PublishedYear), false) => query.OrderByDescending(b => b.PublishedYear),
+
+                (nameof(Book.Title), true) => query.OrderBy(b => b.Title),
+                (nameof(Book.Title), false) => query.OrderByDescending(b => b.Title),
+
+                _ => query
+            };
+
+            return query;
+        }
+    }
+
+    private void SetSort(string column) => sortColumn = column;
+
+    private void ToggleSortDirection() => sortAscending = !sortAscending;
+
+    private async Task DeleteBook(int id)
+    {
+        var book = await Db.Books.FindAsync(id);
+
+        if (book != null)
+        {
+            Db.Books.Remove(book);
+            await Db.SaveChangesAsync();
+
+            books = await Db.Books.AsNoTracking().ToListAsync();
+        }
+    }
+}

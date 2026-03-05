@@ -1,0 +1,50 @@
+﻿@page "/books/add"
+@rendermode InteractiveServer
+@using LibrarySystem.Core.Models
+@using LibrarySystem.Data
+@inject LibraryContext Db
+@inject NavigationManager Nav
+
+<h2>Lägg till ny bok</h2>
+
+    <EditForm Model="book" OnValidSubmit="HandleSubmit" FormName="addBookForm"> 
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>ISBN</label>
+        <InputText class="form-control" @bind-Value="book.ISBN" />
+    </div>
+
+    <div class="mb-3">
+        <label>Titel</label>
+        <InputText class="form-control" @bind-Value="book.Title" />
+    </div>
+
+    <div class="mb-3">
+        <label>Författare</label>
+        <InputText class="form-control" @bind-Value="book.Author" />
+    </div>
+
+    <div class="mb-3">
+        <label>Publiceringsår</label>
+        <InputNumber class="form-control" @bind-Value="book.PublishedYear" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Spara</button>
+</EditForm>
+
+@code {
+    private Book book = new()
+    {
+        PublishedYear = DateTime.Now.Year
+    };
+
+    private async Task HandleSubmit()
+    {
+        Db.Books.Add(book);
+        await Db.SaveChangesAsync();
+
+        Nav.NavigateTo("/books");
+    }
+}
