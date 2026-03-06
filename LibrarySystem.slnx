@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="LibrarySystem.ConsoleApp/LibrarySystem.ConsoleApp.csproj" />
   <Project Path="LibrarySystem.Core/LibrarySystem.Core.csproj" />
   <Project Path="LibrarySystem.Data/LibrarySystem.Data.csproj" />
