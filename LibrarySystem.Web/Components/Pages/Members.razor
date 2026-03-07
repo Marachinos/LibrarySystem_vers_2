@@ -8,6 +8,7 @@
 @inject LibraryContext Db
 
 <h2>👤 Medlemmar</h2>
+
 <a class="btn btn-success mb-3" href="/members/add">
     + Lägg till medlem
 </a>
@@ -18,33 +19,67 @@
 }
 else
 {
-    <div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Medlems-ID</th>
-                <th>Namn</th>
-                <th>E-post</th>
-                <th>Medlem sedan</th>
-                <th>Aktiva lån</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="members-page">
+        <div class="table-responsive desktop-table">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Medlems-ID</th>
+                        <th>Namn</th>
+                        <th>E-post</th>
+                        <th>Medlem sedan</th>
+                        <th>Aktiva lån</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in members)
+                    {
+                        <tr>
+                            <td>@row.MemberId</td>
+                            <td><a href="/members/@row.Id">@row.Name</a></td>
+                            <td>@row.Email</td>
+                            <td>@row.MemberSince.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                            <td>@row.ActiveLoans</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-member-list">
             @foreach (var row in members)
             {
-                <tr>
-                    <td>@row.MemberId</td>
-                    <td><a href="/members/@row.Id">@row.Name</a></td>
-                    <td>@row.Email</td>
-                    <td>@row.MemberSince.ToLocalTime().ToString("yyyy-MM-dd")</td>
-                    <td>@row.ActiveLoans</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    </div>
+                <div class="member-card">
+                    <div class="member-card-row">
+                        <span class="label">Medlems-ID</span>
+                        <span>@row.MemberId</span>
+                    </div>
 
-    <p>Totalt: @members.Count medlemmar</p>
+                    <div class="member-card-row">
+                        <span class="label">Namn</span>
+                        <span><a href="/members/@row.Id">@row.Name</a></span>
+                    </div>
+
+                    <div class="member-card-row">
+                        <span class="label">E-post</span>
+                        <span>@row.Email</span>
+                    </div>
+
+                    <div class="member-card-row">
+                        <span class="label">Medlem sedan</span>
+                        <span>@row.MemberSince.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                    </div>
+
+                    <div class="member-card-row">
+                        <span class="label">Aktiva lån</span>
+                        <span>@row.ActiveLoans</span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <p>Totalt: @members.Count medlemmar</p>
+    </div>
 }
 
 @code {
@@ -56,7 +91,6 @@ else
     {
         loading = true;
 
-        // Hämtar alla medlemmar + räknar aktiva lån i DB (ReturnDate == null)
         members = await Db.Members
             .AsNoTracking()
             .OrderBy(m => m.MemberId)

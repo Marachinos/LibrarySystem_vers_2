@@ -69,49 +69,106 @@
 }
 else
 {
-    <div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>LånId</th>
-                <th>Bok</th>
-                <th>Medlem</th>
-                <th>Lånedatum</th>
-                <th>Förfallodatum</th>
-                <th>Status</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="loans-page">
+        <div class="table-responsive desktop-table">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>LånId</th>
+                        <th>Bok</th>
+                        <th>Medlem</th>
+                        <th>Lånedatum</th>
+                        <th>Förfallodatum</th>
+                        <th>Status</th>
+                        <th>Åtgärd</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in activeLoans.OrderBy(x => x.DueDate))
+                    {
+                        var overdue = l.DueDate < DateTime.UtcNow;
+                        <tr class="@(overdue ? "table-danger" : "")">
+                            <td>@l.Id</td>
+                            <td>@BookTitle(l.BookId)</td>
+                            <td>@MemberName(l.MemberId)</td>
+                            <td>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                            <td>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                            <td>
+                                @if (overdue)
+                                {
+                                    <span class="text-danger">Försenad</span>
+                                }
+                                else
+                                {
+                                    <span class="text-success">OK</span>
+                                }
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-warning btn-sm"
+                                        @onclick="() => ReturnLoan(l.Id)">
+                                    Returnera
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-loan-list">
             @foreach (var l in activeLoans.OrderBy(x => x.DueDate))
             {
                 var overdue = l.DueDate < DateTime.UtcNow;
-                <tr class="@(overdue ? "table-danger" : "")">
-                    <td>@l.Id</td>
-                    <td>@BookTitle(l.BookId)</td>
-                    <td>@MemberName(l.MemberId)</td>
-                    <td>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
-                    <td>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
-                    <td>
-                        @if (overdue)
-                        {
-                            <span class="text-danger">Försenad</span>
-                        }
-                        else
-                        {
-                            <span class="text-success">OK</span>
-                        }
-                    </td>
-                    <td>
+
+                <div class="loan-card @(overdue ? "loan-card-overdue" : "")">
+                    <div class="loan-card-row">
+                        <span class="label">LånId</span>
+                        <span>@l.Id</span>
+                    </div>
+
+                    <div class="loan-card-row">
+                        <span class="label">Bok</span>
+                        <span>@BookTitle(l.BookId)</span>
+                    </div>
+
+                    <div class="loan-card-row">
+                        <span class="label">Medlem</span>
+                        <span>@MemberName(l.MemberId)</span>
+                    </div>
+
+                    <div class="loan-card-row">
+                        <span class="label">Lånedatum</span>
+                        <span>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                    </div>
+
+                    <div class="loan-card-row">
+                        <span class="label">Förfallodatum</span>
+                        <span>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                    </div>
+
+                    <div class="loan-card-row">
+                        <span class="label">Status</span>
+                        <span>
+                            @if (overdue)
+                            {
+                                <span class="text-danger">Försenad</span>
+                            }
+                            else
+                            {
+                                <span class="text-success">OK</span>
+                            }
+                        </span>
+                    </div>
+
+                    <div class="loan-card-actions">
                         <button type="button" class="btn btn-warning btn-sm"
                                 @onclick="() => ReturnLoan(l.Id)">
                             Returnera
                         </button>
-                    </td>
-                </tr>
+                    </div>
+                </div>
             }
-        </tbody>
-    </table>
+        </div>
     </div>
 }
 @code {

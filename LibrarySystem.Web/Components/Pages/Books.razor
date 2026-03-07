@@ -7,29 +7,29 @@
 
 <h1>📚 Böcker</h1>
 
-<div style="max-width: 500px; margin-bottom: 12px;">
+<div class="search-box">
     <input class="form-control"
            placeholder="Sök titel, författare eller ISBN..."
            @bind="searchTerm" @bind:event="oninput" />
 </div>
 
-<div style="margin-bottom: 12px;">
+<div class="toolbar">
     <button type="button" class="btn btn-outline-primary btn-sm"
             @onclick="() => SetSort(nameof(Book.Title))">
         Sortera: Titel
     </button>
 
-    <button type="button" class="btn btn-outline-primary btn-sm" style="margin-left:8px;"
+    <button type="button" class="btn btn-outline-primary btn-sm"
             @onclick="() => SetSort(nameof(Book.PublishedYear))">
         Sortera: År
     </button>
 
-    <button type="button" class="btn btn-outline-secondary btn-sm" style="margin-left:8px;"
+    <button type="button" class="btn btn-outline-secondary btn-sm"
             @onclick="ToggleSortDirection">
         @(sortAscending ? "⬆️ Stigande" : "⬇️ Fallande")
     </button>
 
-    <a class="btn btn-success btn-sm" style="margin-left:8px;" href="/books/add">
+    <a class="btn btn-success btn-sm" href="/books/add">
         + Lägg till bok
     </a>
 </div>
@@ -40,53 +40,105 @@
 }
 else
 {
-    <div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Titel</th>
-                <th>Författare</th>
-                <th>År</th>
-                <th>ISBN</th>
-                <th>Status</th>
-                <th></th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="books-page">
+        <div class="table-responsive desktop-table">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Titel</th>
+                        <th>Författare</th>
+                        <th>År</th>
+                        <th>ISBN</th>
+                        <th>Status</th>
+                        <th>Åtgärder</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var book in ViewBooks)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/books/@book.Id">@book.Title</a>
+                            </td>
+                            <td>@book.Author</td>
+                            <td>@book.PublishedYear</td>
+                            <td>@book.ISBN</td>
+                            <td>
+                                @if (book.IsAvailable)
+                                {
+                                    <span class="text-success">Tillgänglig</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">Utlånad</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a class="btn btn-outline-secondary btn-sm" href="/books/edit/@book.Id">Redigera</a>
+                                    <button type="button" class="btn btn-danger btn-sm"
+                                            @onclick="() => DeleteBook(book.Id)">
+                                        Ta bort
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-book-list">
             @foreach (var book in ViewBooks)
             {
-                <tr>
-                    <td>
-                        <a href="/books/@book.Id">@book.Title</a>
-                    </td>
-                    <td>@book.Author</td>
-                    <td>@book.PublishedYear</td>
-                    <td>@book.ISBN</td>
-                    <td>
-                        @if (book.IsAvailable)
-                        {
-                            <span class="text-success">Tillgänglig</span>
-                        }
-                        else
-                        {
-                            <span class="text-danger">Utlånad</span>
-                        }
-                    </td>
-                    <td>
+                <div class="book-card">
+                    <div class="book-card-row">
+                        <span class="label">Titel</span>
+                        <span><a href="/books/@book.Id">@book.Title</a></span>
+                    </div>
+
+                    <div class="book-card-row">
+                        <span class="label">Författare</span>
+                        <span>@book.Author</span>
+                    </div>
+
+                    <div class="book-card-row">
+                        <span class="label">År</span>
+                        <span>@book.PublishedYear</span>
+                    </div>
+
+                    <div class="book-card-row">
+                        <span class="label">ISBN</span>
+                        <span>@book.ISBN</span>
+                    </div>
+
+                    <div class="book-card-row">
+                        <span class="label">Status</span>
+                        <span>
+                            @if (book.IsAvailable)
+                            {
+                                <span class="text-success">Tillgänglig</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">Utlånad</span>
+                            }
+                        </span>
+                    </div>
+
+                    <div class="book-card-actions">
                         <a class="btn btn-outline-secondary btn-sm" href="/books/edit/@book.Id">Redigera</a>
-                        <button type="button" class="btn btn-danger btn-sm ms-2"
+                        <button type="button" class="btn btn-danger btn-sm"
                                 @onclick="() => DeleteBook(book.Id)">
                             Ta bort
                         </button>
-                    </td>
-                </tr>
+                    </div>
+                </div>
             }
-        </tbody>
-    </table>
-    </div>
+        </div>
 
-    <p>Visar @ViewBooks.Count() av @books.Count böcker.</p>
+        <p>Visar @ViewBooks.Count() av @books.Count böcker.</p>
+    </div>
 }
 
 @code {

@@ -58,3 +58,184 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.books-page {
+    width: 100%;
+}
+
+.action-buttons,
+.book-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.mobile-book-list {
+    display: none;
+}
+
+.book-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.book-card-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+    .book-card-row .label {
+        font-weight: 600;
+        min-width: 90px;
+    }
+
+.book-card-actions {
+    margin-top: 1rem;
+}
+
+/* Gör sökruta och knappar bättre på små skärmar */
+@media (max-width: 768px) {
+    .desktop-table {
+        display: none;
+    }
+
+    .mobile-book-list {
+        display: block;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    .btn {
+        margin-bottom: 0.5rem;
+    }
+
+    .book-card-row {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+        .book-card-row .label {
+            min-width: auto;
+        }
+}
+
+.search-box {
+    max-width: 500px;
+    margin-bottom: 12px;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 12px;
+}
+
+.members-page {
+    width: 100%;
+}
+
+.mobile-member-list {
+    display: none;
+}
+
+.member-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.member-card-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+    .member-card-row .label {
+        font-weight: 600;
+        min-width: 110px;
+    }
+
+@media (max-width: 768px) {
+    .desktop-table {
+        display: none;
+    }
+
+    .mobile-member-list {
+        display: block;
+    }
+
+    .member-card-row {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+        .member-card-row .label {
+            min-width: auto;
+        }
+}
+
+.loans-page {
+    width: 100%;
+}
+
+.mobile-loan-list {
+    display: none;
+}
+
+.loan-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.loan-card-overdue {
+    border: 1px solid #dc3545;
+    background: #fff5f5;
+}
+
+.loan-card-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+    .loan-card-row .label {
+        font-weight: 600;
+        min-width: 120px;
+    }
+
+.loan-card-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .mobile-loan-list {
+        display: block;
+    }
+
+    .loan-card-row {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+        .loan-card-row .label {
+            min-width: auto;
+        }
+}
