@@ -35,13 +35,13 @@ Funktioner i webbgränssnittet inkluderar:
 # Projektstruktur
 LibrarySystem/
 
+├── LibrarySystem.ConsoleApp # Konsoltest av databasen
+
 ├── LibrarySystem.Core # Domänmodeller
 
 ├── LibrarySystem.Data # Entity Framework + Repositories
 
 ├── LibrarySystem.Web # Blazor webbapplikation
-
-├── LibrarySystem.ConsoleApp # Konsoltest av databasen
 
 └── LibrarySystem.Tests # xUnit tester
 
