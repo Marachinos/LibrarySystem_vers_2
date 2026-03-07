@@ -5,6 +5,7 @@
 @using LibrarySystem.Data
 @using LibrarySystem.Data.Services
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components
 
 @inject LibraryContext Db
 @inject LoanService LoanService
@@ -55,16 +56,16 @@ else
                 </div>
 
                 <button type="button" class="btn btn-primary"
-                        disabled="@(selectedMemberId == 0)"
-                        @onclick="Borrow">
+                disabled="@(selectedMemberId == 0)"
+                @onclick="Borrow">
                     Låna bok
                 </button>
             }
             else
             {
                 <button type="button" class="btn btn-warning"
-                        disabled="@(activeLoan is null)"
-                        @onclick="Return">
+                disabled="@(activeLoan is null)"
+                @onclick="Return">
                     Returnera bok
                 </button>
 
@@ -101,34 +102,75 @@ else
     }
     else
     {
-        <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>LånId</th>
-                    <th>Medlem</th>
-                    <th>Lånedatum</th>
-                    <th>Förfallodatum</th>
-                    <th>Returnerad</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div class="book-history-page">
+            <div class="table-responsive desktop-table">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>LånId</th>
+                            <th>Medlem</th>
+                            <th>Lånedatum</th>
+                            <th>Förfallodatum</th>
+                            <th>Returnerad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in loans.OrderByDescending(x => x.LoanDate))
+                        {
+                            <tr>
+                                <td>@l.Id</td>
+                                <td>@MemberName(l.MemberId)</td>
+                                <td>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                                <td>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    @(
+                                                            l.ReturnDate is null
+                                                                                                                        ? "Nej"
+                                                                                                                        : l.ReturnDate.Value.ToLocalTime().ToString("yyyy-MM-dd")
+                                                )
+                                            </td>
+                                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mobile-history-list">
                 @foreach (var l in loans.OrderByDescending(x => x.LoanDate))
                 {
-                    <tr>
-                        <td>@l.Id</td>
-                        <td>@MemberName(l.MemberId)</td>
-                        <td>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
-                        <td>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
-                        <td>
-                            @(l.ReturnDate is null
-                                            ? "Nej"
-                                            : l.ReturnDate.Value.ToLocalTime().ToString("yyyy-MM-dd"))
-                        </td>
-                    </tr>
+                    <div class="history-card">
+                        <div class="history-card-row">
+                            <span class="label">LånId</span>
+                            <span>@l.Id</span>
+                        </div>
+
+                        <div class="history-card-row">
+                            <span class="label">Medlem</span>
+                            <span>@MemberName(l.MemberId)</span>
+                        </div>
+
+                        <div class="history-card-row">
+                            <span class="label">Lånedatum</span>
+                            <span>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                        </div>
+
+                        <div class="history-card-row">
+                            <span class="label">Förfallodatum</span>
+                            <span>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                        </div>
+
+                        <div class="history-card-row">
+                            <span class="label">Returnerad</span>
+                            <span>
+                                @(
+                                                    l.ReturnDate is null ? "Nej"
+                                                               : l.ReturnDate.Value.ToLocalTime().ToString("yyyy-MM-dd")
+                                            )
+                                        </span>
+                                    </div>
+                                </div>
                 }
-            </tbody>
-        </table>
+            </div>
         </div>
     }
 }

@@ -239,3 +239,117 @@ h1:focus {
             min-width: auto;
         }
 }
+
+.book-history-page {
+    width: 100%;
+}
+
+.mobile-history-list {
+    display: none;
+}
+
+.history-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.history-card-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+    .history-card-row .label {
+        font-weight: 600;
+        min-width: 120px;
+    }
+
+@media (max-width: 768px) {
+    .desktop-table {
+        display: none;
+    }
+
+    .mobile-history-list {
+        display: block;
+    }
+
+    .history-card-row {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+        .history-card-row .label {
+            min-width: auto;
+        }
+}
+
+.member-active-loans-page,
+.member-history-page {
+    width: 100%;
+}
+
+.mobile-active-loan-list,
+.mobile-history-list-member {
+    display: none;
+}
+
+.member-loan-card,
+.member-history-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.member-loan-card-overdue {
+    border: 1px solid #dc3545;
+    background: #fff5f5;
+}
+
+.member-loan-card-row,
+.member-history-card-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+    .member-loan-card-row .label,
+    .member-history-card-row .label {
+        font-weight: 600;
+        min-width: 120px;
+    }
+
+.member-loan-card-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .desktop-table {
+        display: none;
+    }
+
+    .mobile-active-loan-list,
+    .mobile-history-list-member {
+        display: block;
+    }
+
+    .member-loan-card-row,
+    .member-history-card-row {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+        .member-loan-card-row .label,
+        .member-history-card-row .label {
+            min-width: auto;
+        }
+}
