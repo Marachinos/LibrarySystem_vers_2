@@ -164,6 +164,7 @@ Utöver grundkraven implementerar systemet:
 - Returnering av lån via UI
 - Repository Pattern
 - Asynkrona databasoperationer
+- Responsiv design (fungerar på mobil och desktop, menyvalet är uppe till höger (tre streck))
 
 ------
 
