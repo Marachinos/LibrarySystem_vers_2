@@ -34,7 +34,7 @@ public class Library
             .ToList();
     }
 
-    // Om dina tester använder lån:
+    // Om testerna använder lån:
     public Loan BorrowBook(Book book, Member member, DateTime loanDate, DateTime dueDate)
     {
         book.IsAvailable = false;

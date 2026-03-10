@@ -13,7 +13,7 @@ samverkar i en modern .NET-applikation.
 
 ## Funktioner
 - Hantera böcker: Lägg till, redigera, ta bort och visa böcker i biblioteket.
-- Hantera låntagare: Lägg till, redigera, ta bort och visa låntagare.
+- Hantera låntagare: Lägg till, redigera och visa låntagare.
 - Hantera lån: Låna ut och återlämna böcker, samt visa aktuella lån.
 
 Funktioner i webbgränssnittet inkluderar:
@@ -25,7 +25,7 @@ Funktioner i webbgränssnittet inkluderar:
 - Ta bort bok
 - Visa bokdetaljer
 - Visa medlemmar
-- Registrera ny medlem
+- Registrera ny medlem, automatiskt medlemsnummer/ID
 - Visa medlemsinformation
 - Skapa och returnera lån
 - Visa aktiva lån
