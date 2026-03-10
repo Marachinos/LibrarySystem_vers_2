@@ -7,7 +7,6 @@ public class Member
 {
     public int Id { get; set; }
 
-    [Required(ErrorMessage = "Medlems-ID är obligatoriskt.")]
     [MaxLength(50)]
     public string MemberId { get; set; } = string.Empty;
 

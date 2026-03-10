@@ -14,11 +14,6 @@
     <ValidationSummary />
 
     <div class="mb-3">
-        <label>Medlems-ID</label>
-        <InputText class="form-control" @bind-Value="member.MemberId" />
-    </div>
-
-    <div class="mb-3">
         <label>Namn</label>
         <InputText class="form-control" @bind-Value="member.Name" />
     </div>
@@ -45,20 +40,26 @@
 
     private string? error;
 
-    private async Task HandleSubmit()
+   private async Task HandleSubmit()
+{
+    error = null;
+
+    try
     {
-        error = null;
+        // Spara först så databasen skapar Id
+        Db.Members.Add(member);
+        await Db.SaveChangesAsync();
 
-        try
-        {
-            Db.Members.Add(member);
-            await Db.SaveChangesAsync();
+        // Skapa automatiskt medlems-id, t.ex. M001
+        member.MemberId = $"M{member.Id:D3}";
 
-            Nav.NavigateTo("/members");
-        }
-        catch (Exception ex)
-        {
-            error = ex.Message;
-        }
+        await Db.SaveChangesAsync();
+
+        Nav.NavigateTo("/members");
     }
+    catch (Exception ex)
+    {
+        error = ex.Message;
+    }
+}
 }
