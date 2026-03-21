@@ -6,51 +6,65 @@ namespace LibrarySystem.Data.Repositories;
 public class MemberRepository : IMemberRepository
 {
     private readonly LibraryContext _ctx;
-    public MemberRepository(LibraryContext ctx) => _ctx = ctx;
 
-    public Task<List<Book>> GetAllAsync()
-        => _ctx.Books.AsNoTracking().ToListAsync();
-
-    public Task<Book?> GetByIdAsync(int id)
-        => _ctx.Books.Include(b => b.Loans).AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
-
-    public Task<Book?> GetByISBNAsync(string isbn)
-        => _ctx.Books.FirstOrDefaultAsync(b => b.ISBN == isbn);
-
-    public async Task AddAsync(Book book)
+    public MemberRepository(LibraryContext ctx)
     {
-        _ctx.Books.Add(book);
+        _ctx = ctx;
+    }
+
+    public Task<List<Member>> GetAllAsync()
+        => _ctx.Members
+            .AsNoTracking()
+            .OrderBy(m => m.MemberId)
+            .ToListAsync();
+
+    public Task<Member?> GetByIdAsync(int id)
+        => _ctx.Members
+            .Include(m => m.Loans)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == id);
+
+    public Task<Member?> GetByMemberIdAsync(string memberId)
+        => _ctx.Members
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.MemberId == memberId);
+
+    public async Task AddAsync(Member member)
+    {
+        var exists = await _ctx.Members.AnyAsync(m => m.MemberId == member.MemberId);
+        if (exists)
+            throw new InvalidOperationException("MemberId måste vara unik.");
+
+        _ctx.Members.Add(member);
         await _ctx.SaveChangesAsync();
     }
 
-    public async Task UpdateAsync(Book book)
+    public async Task UpdateAsync(Member member)
     {
-        _ctx.Books.Update(book);
+        _ctx.Members.Update(member);
         await _ctx.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(int id)
     {
-        var book = await _ctx.Books.FindAsync(id);
-        if (book is null) return;
-        _ctx.Books.Remove(book);
+        var member = await _ctx.Members.FindAsync(id);
+        if (member is null) return;
+
+        _ctx.Members.Remove(member);
         await _ctx.SaveChangesAsync();
     }
 
-    public Task<List<Book>> SearchAsync(string searchTerm)
+    public Task<List<Member>> SearchAsync(string searchTerm)
     {
         var term = (searchTerm ?? "").Trim();
-        return _ctx.Books.AsNoTracking()
-            .Where(b => b.ISBN.Contains(term) || b.Title.Contains(term) || b.Author.Contains(term))
+
+        return _ctx.Members
+            .AsNoTracking()
+            .Where(m =>
+                m.MemberId.Contains(term) ||
+                m.Name.Contains(term) ||
+                m.Email.Contains(term))
+            .OrderBy(m => m.MemberId)
             .ToListAsync();
-    }
-
-    public async Task AddAsync(Member member)
-    {
-        var exists = await _ctx.Members.AnyAsync(m => m.MemberId == member.MemberId);
-        if (exists) throw new InvalidOperationException("MemberId måste vara unik.");
-
-        _ctx.Members.Add(member);
-        await _ctx.SaveChangesAsync();
     }
 }

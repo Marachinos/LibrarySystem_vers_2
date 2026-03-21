@@ -6,42 +6,54 @@ namespace LibrarySystem.Data.Repositories;
 public class LoanRepository : ILoanRepository
 {
     private readonly LibraryContext _ctx;
-    public LoanRepository(LibraryContext ctx) => _ctx = ctx;
 
-    public Task<List<Book>> GetAllAsync()
-        => _ctx.Books.AsNoTracking().ToListAsync();
-
-    public Task<Book?> GetByIdAsync(int id)
-        => _ctx.Books.Include(b => b.Loans).AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
-
-    public Task<Book?> GetByISBNAsync(string isbn)
-        => _ctx.Books.FirstOrDefaultAsync(b => b.ISBN == isbn);
-
-    public async Task AddAsync(Book book)
+    public LoanRepository(LibraryContext ctx)
     {
-        _ctx.Books.Add(book);
+        _ctx = ctx;
+    }
+
+    public Task<List<Loan>> GetAllAsync()
+        => _ctx.Loans
+            .Include(l => l.Book)
+            .Include(l => l.Member)
+            .AsNoTracking()
+            .OrderByDescending(l => l.LoanDate)
+            .ToListAsync();
+
+    public Task<List<Loan>> GetActiveAsync()
+        => _ctx.Loans
+            .Include(l => l.Book)
+            .Include(l => l.Member)
+            .AsNoTracking()
+            .Where(l => l.ReturnDate == null)
+            .OrderBy(l => l.DueDate)
+            .ToListAsync();
+
+    public Task<Loan?> GetByIdAsync(int id)
+        => _ctx.Loans
+            .Include(l => l.Book)
+            .Include(l => l.Member)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+    public async Task AddAsync(Loan loan)
+    {
+        _ctx.Loans.Add(loan);
         await _ctx.SaveChangesAsync();
     }
 
-    public async Task UpdateAsync(Book book)
+    public async Task UpdateAsync(Loan loan)
     {
-        _ctx.Books.Update(book);
+        _ctx.Loans.Update(loan);
         await _ctx.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(int id)
     {
-        var book = await _ctx.Books.FindAsync(id);
-        if (book is null) return;
-        _ctx.Books.Remove(book);
-        await _ctx.SaveChangesAsync();
-    }
+        var loan = await _ctx.Loans.FindAsync(id);
+        if (loan is null) return;
 
-    public Task<List<Book>> SearchAsync(string searchTerm)
-    {
-        var term = (searchTerm ?? "").Trim();
-        return _ctx.Books.AsNoTracking()
-            .Where(b => b.ISBN.Contains(term) || b.Title.Contains(term) || b.Author.Contains(term))
-            .ToListAsync();
+        _ctx.Loans.Remove(loan);
+        await _ctx.SaveChangesAsync();
     }
 }

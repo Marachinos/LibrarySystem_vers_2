@@ -4,11 +4,10 @@ namespace LibrarySystem.Data.Repositories;
 
 public interface ILoanRepository
 {
-    Task<List<Book>> GetAllAsync();
-    Task<Book?> GetByIdAsync(int id);
-    Task<Book?> GetByISBNAsync(string isbn);
-    Task AddAsync(Book book);
-    Task UpdateAsync(Book book);
+    Task<List<Loan>> GetAllAsync();
+    Task<List<Loan>> GetActiveAsync();
+    Task<Loan?> GetByIdAsync(int id);
+    Task AddAsync(Loan loan);
+    Task UpdateAsync(Loan loan);
     Task DeleteAsync(int id);
-    Task<List<Book>> SearchAsync(string searchTerm);
 }

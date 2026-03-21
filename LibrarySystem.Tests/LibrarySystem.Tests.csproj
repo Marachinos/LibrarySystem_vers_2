@@ -21,9 +21,10 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LibrarySystem.Core\LibrarySystem.Core.csproj" />
-    <ProjectReference Include="..\LibrarySystem.Data\LibrarySystem.Data.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\LibrarySystem.Core\LibrarySystem.Core.csproj" />
+		<ProjectReference Include="..\LibrarySystem.Data\LibrarySystem.Data.csproj" />
+		<ProjectReference Include="..\LibrarySystem.Web\LibrarySystem.Web.csproj" />
+	</ItemGroup>
 
 </Project>

@@ -4,11 +4,11 @@ namespace LibrarySystem.Data.Repositories;
 
 public interface IMemberRepository
 {
-    Task<List<Book>> GetAllAsync();
-    Task<Book?> GetByIdAsync(int id);
-    Task<Book?> GetByISBNAsync(string isbn);
-    Task AddAsync(Book book);
-    Task UpdateAsync(Book book);
+    Task<List<Member>> GetAllAsync();
+    Task<Member?> GetByIdAsync(int id);
+    Task<Member?> GetByMemberIdAsync(string memberId);
+    Task AddAsync(Member member);
+    Task UpdateAsync(Member member);
     Task DeleteAsync(int id);
-    Task<List<Book>> SearchAsync(string searchTerm);
+    Task<List<Member>> SearchAsync(string searchTerm);
 }
