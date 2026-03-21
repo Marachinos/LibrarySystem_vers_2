@@ -171,3 +171,11 @@ Utöver grundkraven implementerar systemet:
 # Författare
 
 Projekt skapat som del av kursuppgift i **.NET / C# applikationsutveckling**.
+
+------
+# Uppdatering 2026-03-21:
+- Rättat till IMemberRepository och ILoanRepository så de returnerar rätt typ.
+- Copy-paste-felen i repository-lagret är borttagna.
+- Projektet har kompletterats med bUnit-tester för Blazor-komponenter.
+- Testtäckningen omfattar nu både repository-lager, tjänstelager och UI-komponenter
+- Tagit bort Counter.razor.
