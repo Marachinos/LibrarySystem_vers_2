@@ -81,18 +81,22 @@ else
                         <th>Förfallodatum</th>
                         <th>Status</th>
                         <th>Åtgärd</th>
+                        <th>Försenad (dagar)</th>
+                        <th>Avgift</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var l in activeLoans.OrderBy(x => x.DueDate))
                     {
-                        var overdue = l.DueDate < DateTime.UtcNow;
+                        var overdue = l.IsOverdue(DateTime.UtcNow);
                         <tr class="@(overdue ? "table-danger" : "")">
                             <td>@l.Id</td>
                             <td>@BookTitle(l.BookId)</td>
                             <td>@MemberName(l.MemberId)</td>
                             <td>@l.LoanDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
                             <td>@l.DueDate.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                            <td>@(l.IsOverdue(DateTime.UtcNow) ? l.GetOverdueDays(DateTime.UtcNow) : 0)</td>
+                            <td>@l.GetLateFee(DateTime.UtcNow).ToString("0.00") kr</td>
                             <td>
                                 @if (overdue)
                                 {

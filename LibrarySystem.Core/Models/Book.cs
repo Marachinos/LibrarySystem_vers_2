@@ -25,6 +25,7 @@ public class Book : ISearchable
     public bool IsAvailable { get; set; } = true;
 
     public ICollection<Loan> Loans { get; set; } = new List<Loan>();
+    public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
 
     public Book() { } // EF
 

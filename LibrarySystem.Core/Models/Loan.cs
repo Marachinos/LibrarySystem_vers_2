@@ -14,10 +14,23 @@ public class Loan
     public DateTime DueDate { get; set; }
     public DateTime? ReturnDate { get; set; }
 
+    //Förseningsavgift per dag, kan anpassas efter behov
+    public decimal LateFeePerDay { get; set; } = 5m;
+
     public bool IsReturned => ReturnDate.HasValue;
 
-    // enkel “overdue” logik (för UI)
     public bool IsOverdue(DateTime asOf) => !IsReturned && asOf.Date > DueDate.Date;
 
-    public Loan() { } // EF
+    public int GetOverdueDays(DateTime asOf)
+    {
+        if (!IsOverdue(asOf)) return 0;
+        return (asOf.Date - DueDate.Date).Days;
+    }
+
+    public decimal GetLateFee(DateTime asOf)
+    {
+        return GetOverdueDays(asOf) * LateFeePerDay;
+    }
+
+    public Loan() { }
 }

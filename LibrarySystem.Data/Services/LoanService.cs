@@ -29,7 +29,8 @@ public class LoanService
             BookId = bookId,
             MemberId = memberId,
             LoanDate = now,
-            DueDate = now.AddDays(days)
+            DueDate = now.AddDays(days),
+            LateFeePerDay = 5m
         };
 
         _ctx.Loans.Add(loan);

@@ -19,7 +19,10 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddScoped<LoanService>();
 
+builder.Services.AddScoped<ReservationService>();
+
 builder.Services.AddScoped<IBookRepository, BookRepository>();
+
 
 var app = builder.Build();
 

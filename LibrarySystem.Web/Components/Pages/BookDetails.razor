@@ -10,6 +10,7 @@
 @inject LibraryContext Db
 @inject LoanService LoanService
 @inject NavigationManager Nav
+@inject ReservationService ReservationService
 
 <h2>Bokdetaljer</h2>
 
@@ -64,10 +65,28 @@ else
             else
             {
                 <button type="button" class="btn btn-warning"
-                disabled="@(activeLoan is null)"
-                @onclick="Return">
+                        disabled="@(activeLoan is null)"
+                        @onclick="Return">
                     Returnera bok
                 </button>
+
+                <div class="mt-3">
+                    <label><b>Reservera bok för medlem:</b></label>
+                    <select class="form-select" @bind="selectedReservationMemberId">
+                        <option value="0">-- välj medlem --</option>
+                        @foreach (var m in members)
+                        {
+                            <option value="@m.Id">@m.MemberId - @m.Name</option>
+                        }
+                    </select>
+
+                    <button type="button"
+                            class="btn btn-outline-primary mt-2"
+                            disabled="@(selectedReservationMemberId == 0)"
+                            @onclick="Reserve">
+                        Reservera bok
+                    </button>
+                </div>
 
                 @if (activeLoan is not null)
                 {
@@ -93,6 +112,36 @@ else
             <div class="alert alert-danger mt-3">@error</div>
         }
     </div>
+
+    <h4>Reservationer</h4>
+
+    @if (reservations.Count == 0)
+    {
+        <p>Inga aktiva reservationer.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Köplats</th>
+                    <th>Medlem</th>
+                    <th>Reserverad</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < reservations.Count; i++)
+                {
+                    var r = reservations[i];
+                    <tr>
+                        <td>@(i + 1)</td>
+                        <td>@r.Member.MemberId - @r.Member.Name</td>
+                        <td>@r.ReservedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 
     <h4>Lånehistorik</h4>
 
@@ -190,6 +239,9 @@ else
     private string? message;
     private string? error;
 
+    private List<Reservation> reservations = new();
+    private int selectedReservationMemberId = 0;
+
     protected override async Task OnParametersSetAsync()
     {
         loading = true;
@@ -213,6 +265,9 @@ else
         activeLoan = loans.FirstOrDefault(l => l.ReturnDate == null);
 
         loading = false;
+
+        // Ladda reservationer för boken
+        reservations = await ReservationService.GetActiveReservationsForBookAsync(Id);
     }
 
     private string MemberName(int memberDbId)
@@ -257,6 +312,25 @@ else
             message = "Boken har returnerats.";
 
             // Ladda om sidan-data
+            await OnParametersSetAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+
+    private async Task Reserve()
+    {
+        error = null;
+        message = null;
+
+        try
+        {
+            await ReservationService.ReserveAsync(Id, selectedReservationMemberId);
+            message = "Boken har reserverats.";
+            selectedReservationMemberId = 0;
+
             await OnParametersSetAsync();
         }
         catch (Exception ex)

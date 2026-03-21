@@ -22,6 +22,7 @@ public class Member
     public DateTime MemberSince { get; set; } = DateTime.UtcNow;
 
     public ICollection<Loan> Loans { get; set; } = new List<Loan>();
+    public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
 
     public Member() { } // EF
 

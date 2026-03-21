@@ -10,6 +10,7 @@ public class LibraryContext : DbContext
     public DbSet<Book> Books => Set<Book>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<Loan> Loans => Set<Loan>();
+    public DbSet<Reservation> Reservations => Set<Reservation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,5 +33,20 @@ public class LibraryContext : DbContext
             .WithMany(m => m.Loans)
             .HasForeignKey(l => l.MemberId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Reservation>()
+            .HasOne(r => r.Book)
+            .WithMany(b => b.Reservations)
+            .HasForeignKey(r => r.BookId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Reservation>()
+            .HasOne(r => r.Member)
+            .WithMany(m => m.Reservations)
+            .HasForeignKey(r => r.MemberId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Reservation>()
+            .HasIndex(r => new { r.BookId, r.MemberId, r.IsActive });
     }
 }
